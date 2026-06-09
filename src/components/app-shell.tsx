@@ -81,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 return (
                   <Link
                     key={item.to}
-                    to={item.to}
+                    to={item.to as "/dashboard"}
                     className={cn(
                       "inline-flex items-center gap-1.5 px-3 h-9 rounded-lg text-sm whitespace-nowrap transition-colors",
                       active ? "bg-secondary text-secondary-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
@@ -108,7 +108,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               return (
                 <Link
                   key={item.to}
-                  to={item.to}
+                  to={item.to as "/dashboard"}
                   className={cn(
                     "flex flex-col items-center justify-center gap-0.5 text-[11px] transition-colors",
                     active ? "text-foreground" : "text-muted-foreground"
