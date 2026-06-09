@@ -13,8 +13,14 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppUsersRouteImport } from './routes/_app.users'
+import { Route as AppTransferRouteImport } from './routes/_app.transfer'
+import { Route as AppStockOutRouteImport } from './routes/_app.stock-out'
+import { Route as AppStockInRouteImport } from './routes/_app.stock-in'
 import { Route as AppProductsRouteImport } from './routes/_app.products'
+import { Route as AppHistoryRouteImport } from './routes/_app.history'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppBalanceRouteImport } from './routes/_app.balance'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -35,9 +41,34 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppUsersRoute = AppUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTransferRoute = AppTransferRouteImport.update({
+  id: '/transfer',
+  path: '/transfer',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStockOutRoute = AppStockOutRouteImport.update({
+  id: '/stock-out',
+  path: '/stock-out',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStockInRoute = AppStockInRouteImport.update({
+  id: '/stock-in',
+  path: '/stock-in',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProductsRoute = AppProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHistoryRoute = AppHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -45,20 +76,37 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBalanceRoute = AppBalanceRouteImport.update({
+  id: '/balance',
+  path: '/balance',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/balance': typeof AppBalanceRoute
   '/dashboard': typeof AppDashboardRoute
+  '/history': typeof AppHistoryRoute
   '/products': typeof AppProductsRoute
+  '/stock-in': typeof AppStockInRoute
+  '/stock-out': typeof AppStockOutRoute
+  '/transfer': typeof AppTransferRoute
+  '/users': typeof AppUsersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/balance': typeof AppBalanceRoute
   '/dashboard': typeof AppDashboardRoute
+  '/history': typeof AppHistoryRoute
   '/products': typeof AppProductsRoute
+  '/stock-in': typeof AppStockInRoute
+  '/stock-out': typeof AppStockOutRoute
+  '/transfer': typeof AppTransferRoute
+  '/users': typeof AppUsersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -66,22 +114,56 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/_app/balance': typeof AppBalanceRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/history': typeof AppHistoryRoute
   '/_app/products': typeof AppProductsRoute
+  '/_app/stock-in': typeof AppStockInRoute
+  '/_app/stock-out': typeof AppStockOutRoute
+  '/_app/transfer': typeof AppTransferRoute
+  '/_app/users': typeof AppUsersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup' | '/dashboard' | '/products'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/balance'
+    | '/dashboard'
+    | '/history'
+    | '/products'
+    | '/stock-in'
+    | '/stock-out'
+    | '/transfer'
+    | '/users'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/dashboard' | '/products'
+  to:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/balance'
+    | '/dashboard'
+    | '/history'
+    | '/products'
+    | '/stock-in'
+    | '/stock-out'
+    | '/transfer'
+    | '/users'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/login'
     | '/signup'
+    | '/_app/balance'
     | '/_app/dashboard'
+    | '/_app/history'
     | '/_app/products'
+    | '/_app/stock-in'
+    | '/_app/stock-out'
+    | '/_app/transfer'
+    | '/_app/users'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -121,11 +203,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/users': {
+      id: '/_app/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof AppUsersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/transfer': {
+      id: '/_app/transfer'
+      path: '/transfer'
+      fullPath: '/transfer'
+      preLoaderRoute: typeof AppTransferRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/stock-out': {
+      id: '/_app/stock-out'
+      path: '/stock-out'
+      fullPath: '/stock-out'
+      preLoaderRoute: typeof AppStockOutRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/stock-in': {
+      id: '/_app/stock-in'
+      path: '/stock-in'
+      fullPath: '/stock-in'
+      preLoaderRoute: typeof AppStockInRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/products': {
       id: '/_app/products'
       path: '/products'
       fullPath: '/products'
       preLoaderRoute: typeof AppProductsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/history': {
+      id: '/_app/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AppHistoryRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -135,17 +252,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/balance': {
+      id: '/_app/balance'
+      path: '/balance'
+      fullPath: '/balance'
+      preLoaderRoute: typeof AppBalanceRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppBalanceRoute: typeof AppBalanceRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppHistoryRoute: typeof AppHistoryRoute
   AppProductsRoute: typeof AppProductsRoute
+  AppStockInRoute: typeof AppStockInRoute
+  AppStockOutRoute: typeof AppStockOutRoute
+  AppTransferRoute: typeof AppTransferRoute
+  AppUsersRoute: typeof AppUsersRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppBalanceRoute: AppBalanceRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppHistoryRoute: AppHistoryRoute,
   AppProductsRoute: AppProductsRoute,
+  AppStockInRoute: AppStockInRoute,
+  AppStockOutRoute: AppStockOutRoute,
+  AppTransferRoute: AppTransferRoute,
+  AppUsersRoute: AppUsersRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
