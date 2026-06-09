@@ -5,19 +5,27 @@ import { branchName } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+type RoleName = "owner" | "manager" | "staff";
+interface NavItem {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  roles: ReadonlyArray<RoleName>;
+}
+
+const navItems: ReadonlyArray<NavItem> = [
   { to: "/dashboard", label: "หน้าหลัก", icon: LayoutDashboard, roles: ["owner", "manager", "staff"] },
   { to: "/stock-in", label: "รับเข้า", icon: ArrowDownToLine, roles: ["owner", "manager", "staff"] },
   { to: "/stock-out", label: "เบิกออก", icon: ArrowUpFromLine, roles: ["owner", "manager", "staff"] },
   { to: "/transfer", label: "โอนย้าย", icon: ArrowLeftRight, roles: ["owner", "manager"] },
   { to: "/balance", label: "คงเหลือ", icon: Boxes, roles: ["owner", "manager", "staff"] },
-] as const;
+];
 
-const moreItems = [
+const moreItems: ReadonlyArray<NavItem> = [
   { to: "/products", label: "สินค้า", icon: Package, roles: ["owner", "manager"] },
   { to: "/history", label: "ประวัติ", icon: History, roles: ["owner", "manager", "staff"] },
   { to: "/users", label: "ผู้ใช้งาน", icon: Users, roles: ["owner"] },
-] as const;
+];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { profile, logout } = useAuth();
