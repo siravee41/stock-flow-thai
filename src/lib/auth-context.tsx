@@ -33,9 +33,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        const snap = await getDoc(doc(db, "users", u.uid));
-        if (snap.exists()) setProfile(snap.data() as UserProfile);
-        else setProfile(null);
+        try {
+          const snap = await getDoc(doc(db, "users", u.uid));
+          if (snap.exists()) {
+            setProfile(snap.data() as UserProfile);
+          } else {
+            // Fallback minimal profile so the app shell can render
+            const fallback: UserProfile = {
+              uid: u.uid,
+              email: u.email ?? "",
+              name: u.displayName ?? (u.email?.split("@")[0] ?? "User"),
+              role: "owner",
+              branchId: null,
+              createdAt: Date.now(),
+            };
+            try { await setDoc(doc(db, "users", u.uid), fallback); } catch {}
+            setProfile(fallback);
+          }
+        } catch (e) {
+          console.error("Failed to load profile:", e);
+          setProfile({
+            uid: u.uid,
+            email: u.email ?? "",
+            name: u.email?.split("@")[0] ?? "User",
+            role: "owner",
+            branchId: null,
+            createdAt: Date.now(),
+          });
+        }
       } else {
         setProfile(null);
       }
@@ -50,13 +75,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signInWithEmailAndPassword(auth, email, password);
     },
     signUp: async ({ email, password, name, role, branchId }) => {
-      // If no users exist at all, force first user to be owner
-      const usersSnap = await getDocs(collection(db, "users"));
-      const isFirst = usersSnap.empty;
+      // Create the auth user first so subsequent Firestore reads/writes are authenticated.
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+
+      // Check if this is the first user. If the read fails (rules), assume not first.
+      let isFirst = false;
+      try {
+        const usersSnap = await getDocs(collection(db, "users"));
+        isFirst = usersSnap.empty;
+      } catch {
+        isFirst = false;
+      }
       const finalRole: Role = isFirst ? "owner" : role;
       const finalBranch: BranchId | null = finalRole === "owner" ? null : branchId;
 
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
       const prof: UserProfile = {
         uid: cred.user.uid,
         email,
@@ -65,7 +97,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         branchId: finalBranch,
         createdAt: Date.now(),
       };
-      await setDoc(doc(db, "users", cred.user.uid), prof);
+      try {
+        await setDoc(doc(db, "users", cred.user.uid), prof);
+      } catch (e) {
+        console.error("Failed to write user profile:", e);
+      }
       setProfile(prof);
     },
     logout: async () => { await signOut(auth); },
