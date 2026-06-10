@@ -1,5 +1,5 @@
 import { Link, useRouter, useLocation } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, Boxes, History, Users, LogOut, ChefHat } from "lucide-react";
+import { LayoutDashboard, Package, ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, Boxes, History, Users, LogOut, ChefHat, Store, BookOpen, Repeat } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { branchName } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,9 @@ const navItems: ReadonlyArray<NavItem> = [
 
 const moreItems: ReadonlyArray<NavItem> = [
   { to: "/products", label: "สินค้า", icon: Package, roles: ["owner", "manager"] },
+  { to: "/catalog", label: "แคตตาล็อก", icon: BookOpen, roles: ["owner", "manager"] },
+  { to: "/branches", label: "สาขา", icon: Store, roles: ["owner"] },
+  { to: "/movements", label: "เคลื่อนไหว", icon: Repeat, roles: ["owner", "manager"] },
   { to: "/history", label: "ประวัติ", icon: History, roles: ["owner", "manager", "staff"] },
   { to: "/users", label: "ผู้ใช้งาน", icon: Users, roles: ["owner"] },
 ];

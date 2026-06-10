@@ -18,8 +18,11 @@ import { Route as AppTransferRouteImport } from './routes/_app.transfer'
 import { Route as AppStockOutRouteImport } from './routes/_app.stock-out'
 import { Route as AppStockInRouteImport } from './routes/_app.stock-in'
 import { Route as AppProductsRouteImport } from './routes/_app.products'
+import { Route as AppMovementsRouteImport } from './routes/_app.movements'
 import { Route as AppHistoryRouteImport } from './routes/_app.history'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppCatalogRouteImport } from './routes/_app.catalog'
+import { Route as AppBranchesRouteImport } from './routes/_app.branches'
 import { Route as AppBalanceRouteImport } from './routes/_app.balance'
 
 const SignupRoute = SignupRouteImport.update({
@@ -66,6 +69,11 @@ const AppProductsRoute = AppProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMovementsRoute = AppMovementsRouteImport.update({
+  id: '/movements',
+  path: '/movements',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppHistoryRoute = AppHistoryRouteImport.update({
   id: '/history',
   path: '/history',
@@ -74,6 +82,16 @@ const AppHistoryRoute = AppHistoryRouteImport.update({
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCatalogRoute = AppCatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBranchesRoute = AppBranchesRouteImport.update({
+  id: '/branches',
+  path: '/branches',
   getParentRoute: () => AppRoute,
 } as any)
 const AppBalanceRoute = AppBalanceRouteImport.update({
@@ -87,8 +105,11 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/balance': typeof AppBalanceRoute
+  '/branches': typeof AppBranchesRoute
+  '/catalog': typeof AppCatalogRoute
   '/dashboard': typeof AppDashboardRoute
   '/history': typeof AppHistoryRoute
+  '/movements': typeof AppMovementsRoute
   '/products': typeof AppProductsRoute
   '/stock-in': typeof AppStockInRoute
   '/stock-out': typeof AppStockOutRoute
@@ -100,8 +121,11 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/balance': typeof AppBalanceRoute
+  '/branches': typeof AppBranchesRoute
+  '/catalog': typeof AppCatalogRoute
   '/dashboard': typeof AppDashboardRoute
   '/history': typeof AppHistoryRoute
+  '/movements': typeof AppMovementsRoute
   '/products': typeof AppProductsRoute
   '/stock-in': typeof AppStockInRoute
   '/stock-out': typeof AppStockOutRoute
@@ -115,8 +139,11 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/_app/balance': typeof AppBalanceRoute
+  '/_app/branches': typeof AppBranchesRoute
+  '/_app/catalog': typeof AppCatalogRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/history': typeof AppHistoryRoute
+  '/_app/movements': typeof AppMovementsRoute
   '/_app/products': typeof AppProductsRoute
   '/_app/stock-in': typeof AppStockInRoute
   '/_app/stock-out': typeof AppStockOutRoute
@@ -130,8 +157,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/balance'
+    | '/branches'
+    | '/catalog'
     | '/dashboard'
     | '/history'
+    | '/movements'
     | '/products'
     | '/stock-in'
     | '/stock-out'
@@ -143,8 +173,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/balance'
+    | '/branches'
+    | '/catalog'
     | '/dashboard'
     | '/history'
+    | '/movements'
     | '/products'
     | '/stock-in'
     | '/stock-out'
@@ -157,8 +190,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/_app/balance'
+    | '/_app/branches'
+    | '/_app/catalog'
     | '/_app/dashboard'
     | '/_app/history'
+    | '/_app/movements'
     | '/_app/products'
     | '/_app/stock-in'
     | '/_app/stock-out'
@@ -238,6 +274,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProductsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/movements': {
+      id: '/_app/movements'
+      path: '/movements'
+      fullPath: '/movements'
+      preLoaderRoute: typeof AppMovementsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/history': {
       id: '/_app/history'
       path: '/history'
@@ -252,6 +295,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/catalog': {
+      id: '/_app/catalog'
+      path: '/catalog'
+      fullPath: '/catalog'
+      preLoaderRoute: typeof AppCatalogRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/branches': {
+      id: '/_app/branches'
+      path: '/branches'
+      fullPath: '/branches'
+      preLoaderRoute: typeof AppBranchesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/balance': {
       id: '/_app/balance'
       path: '/balance'
@@ -264,8 +321,11 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppBalanceRoute: typeof AppBalanceRoute
+  AppBranchesRoute: typeof AppBranchesRoute
+  AppCatalogRoute: typeof AppCatalogRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppHistoryRoute: typeof AppHistoryRoute
+  AppMovementsRoute: typeof AppMovementsRoute
   AppProductsRoute: typeof AppProductsRoute
   AppStockInRoute: typeof AppStockInRoute
   AppStockOutRoute: typeof AppStockOutRoute
@@ -275,8 +335,11 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppBalanceRoute: AppBalanceRoute,
+  AppBranchesRoute: AppBranchesRoute,
+  AppCatalogRoute: AppCatalogRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppHistoryRoute: AppHistoryRoute,
+  AppMovementsRoute: AppMovementsRoute,
   AppProductsRoute: AppProductsRoute,
   AppStockInRoute: AppStockInRoute,
   AppStockOutRoute: AppStockOutRoute,
