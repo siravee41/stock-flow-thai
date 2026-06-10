@@ -33,9 +33,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        const snap = await getDoc(doc(db, "users", u.uid));
-        if (snap.exists()) setProfile(snap.data() as UserProfile);
-        else setProfile(null);
+        try {
+          const snap = await getDoc(doc(db, "users", u.uid));
+          if (snap.exists()) {
+            setProfile(snap.data() as UserProfile);
+          } else {
+            // Fallback minimal profile so the app shell can render
+            const fallback: UserProfile = {
+              uid: u.uid,
+              email: u.email ?? "",
+              name: u.displayName ?? (u.email?.split("@")[0] ?? "User"),
+              role: "owner",
+              branchId: null,
+              createdAt: Date.now(),
+            };
+            try { await setDoc(doc(db, "users", u.uid), fallback); } catch {}
+            setProfile(fallback);
+          }
+        } catch (e) {
+          console.error("Failed to load profile:", e);
+          setProfile({
+            uid: u.uid,
+            email: u.email ?? "",
+            name: u.email?.split("@")[0] ?? "User",
+            role: "owner",
+            branchId: null,
+            createdAt: Date.now(),
+          });
+        }
       } else {
         setProfile(null);
       }
