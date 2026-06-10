@@ -20,7 +20,7 @@ function useCollection<T extends { id: string }>(name: string, orderField?: stri
       ? query(collection(db, name), orderBy(orderField, orderField === "created_at" ? "desc" : "asc"))
       : query(collection(db, name));
     const unsub = onSnapshot(q, (snap) => {
-      setData(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<T, "id">) })));
+      setData(snap.docs.map((d) => ({ id: d.id, ...(d.data() as object) })) as T[]);
       setLoading(false);
     }, () => setLoading(false));
     return unsub;
