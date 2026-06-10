@@ -8,28 +8,67 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Store } from "lucide-react";
+import { Plus, Pencil, Trash2, Store, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_app/branches")({ component: BranchesPage });
+
+const SAMPLE_BRANCHES = [
+  "Yukata Chang Phueak",
+  "HongDae Nong Pratheep",
+  "Yokoya Izakaya",
+  "Central Kitchen",
+];
+
+const SAMPLE_PRODUCTS = [
+  { code: "BF-001", name: "เนื้อวากิว A5", unit: "กก.", category: "เนื้อสัตว์", min_stock: 5 },
+  { code: "PK-001", name: "หมูสามชั้น", unit: "กก.", category: "เนื้อสัตว์", min_stock: 10 },
+  { code: "VG-001", name: "ผักกาดขาว", unit: "กก.", category: "ผัก", min_stock: 8 },
+  { code: "VG-002", name: "เห็ดเข็มทอง", unit: "ถุง", category: "ผัก", min_stock: 20 },
+  { code: "BV-001", name: "เบียร์อาซาฮี", unit: "ขวด", category: "เครื่องดื่ม", min_stock: 24 },
+  { code: "SC-001", name: "ซอสยากินิคุ", unit: "ขวด", category: "เครื่องปรุง", min_stock: 6 },
+];
 
 function BranchesPage() {
   const { profile } = useAuth();
   const { data, loading } = useBranches();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<BranchDoc | null>(null);
+  const [seeding, setSeeding] = useState(false);
   const canEdit = profile?.role === "owner";
+
+  const seed = async () => {
+    if (seeding) return;
+    setSeeding(true);
+    try {
+      const existing = new Set(data.map((b) => b.name));
+      for (const name of SAMPLE_BRANCHES) {
+        if (!existing.has(name)) await addDoc(collection(db, "branches"), { name });
+      }
+      // seed products_v2 sample
+      const { getDocs, query, where } = await import("firebase/firestore");
+      for (const p of SAMPLE_PRODUCTS) {
+        const snap = await getDocs(query(collection(db, "products_v2"), where("code", "==", p.code)));
+        if (snap.empty) await addDoc(collection(db, "products_v2"), { ...p, created_at: Date.now() });
+      }
+    } finally { setSeeding(false); }
+  };
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">สาขา</h1>
-          <p className="text-sm text-muted-foreground">จัดการสาขา/ครัวกลาง</p>
+          <p className="text-sm text-muted-foreground">จัดการสาขา / ครัวกลาง</p>
         </div>
         {canEdit && (
-          <Button variant="ink" onClick={() => { setEditing(null); setOpen(true); }}>
-            <Plus className="h-4 w-4" /> เพิ่มสาขา
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={seed} disabled={seeding}>
+              <Sparkles className="h-4 w-4" /> {seeding ? "กำลังสร้าง..." : "สร้างข้อมูลตัวอย่าง"}
+            </Button>
+            <Button variant="ink" onClick={() => { setEditing(null); setOpen(true); }}>
+              <Plus className="h-4 w-4" /> เพิ่มสาขา
+            </Button>
+          </div>
         )}
       </div>
       <div className="card-soft divide-y divide-border">
