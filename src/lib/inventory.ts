@@ -1,14 +1,5 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  runTransaction,
-  serverTimestamp,
-} from "firebase/firestore";
-import { db, type BranchId, type TxType } from "./firebase";
-
-const stockId = (branchId: string, productId: string) =>
-  `${branchId}__${productId}`;
+import { supabase } from "@/integrations/supabase/client";
+import type { BranchId } from "./firebase";
 
 interface BaseArgs {
   productId: string;
@@ -19,136 +10,55 @@ interface BaseArgs {
   createdByName: string;
 }
 
-export async function stockIn(
-  args: BaseArgs & { branchId: BranchId },
-) {
-  const { productId, productName, quantity, note, branchId, createdBy, createdByName } = args;
-  if (quantity <= 0) throw new Error("จำนวนต้องมากกว่า 0");
+async function callRpc(args: {
+  type: "IN" | "OUT" | "TRANSFER";
+  productId: string;
+  branchId: BranchId;
+  toBranchId?: BranchId;
+  quantity: number;
+  note?: string;
+}) {
+  const { data, error } = await supabase.rpc("perform_stock_movement", {
+    _type: args.type,
+    _product_id: args.productId,
+    _branch_id: args.branchId,
+    _to_branch_id: args.toBranchId ?? null,
+    _quantity: args.quantity,
+    _note: args.note ?? null,
+  });
+  if (error) {
+    const msg = error.message || "";
+    if (msg.includes("insufficient_stock")) throw new Error("สต๊อกไม่พอ");
+    if (msg.includes("invalid_destination")) throw new Error("สาขาต้นทางและปลายทางต้องต่างกัน");
+    if (msg.includes("forbidden_branch")) throw new Error("ไม่มีสิทธิ์ทำรายการที่สาขานี้");
+    if (msg.includes("product_not_found")) throw new Error("ไม่พบสินค้า");
+    throw new Error(msg);
+  }
+  return data as string;
+}
 
-  await runTransaction(db, async (tx) => {
-    const stockRef = doc(db, "stock", stockId(branchId, productId));
-    const txRef = doc(collection(db, "transactions"));
-    const snap = await tx.get(stockRef);
-    const before = snap.exists() ? (snap.data().quantity as number) : 0;
-    const after = before + quantity;
+export async function stockIn(args: BaseArgs & { branchId: BranchId }) {
+  if (args.quantity <= 0) throw new Error("จำนวนต้องมากกว่า 0");
+  await callRpc({ type: "IN", productId: args.productId, branchId: args.branchId, quantity: args.quantity, note: args.note });
+}
 
-    tx.set(stockRef, {
-      branchId,
-      productId,
-      quantity: after,
-      updatedAt: Date.now(),
-    });
+export async function stockOut(args: BaseArgs & { branchId: BranchId }) {
+  if (args.quantity <= 0) throw new Error("จำนวนต้องมากกว่า 0");
+  await callRpc({ type: "OUT", productId: args.productId, branchId: args.branchId, quantity: args.quantity, note: args.note });
+}
 
-    tx.set(txRef, {
-      type: "IN" as TxType,
-      productId,
-      productName,
-      branchId,
-      quantity,
-      quantityBefore: before,
-      quantityAfter: after,
-      note: note ?? "",
-      createdAt: Date.now(),
-      createdBy,
-      createdByName,
-      serverAt: serverTimestamp(),
-    });
+export async function transferStock(args: BaseArgs & { fromBranchId: BranchId; toBranchId: BranchId }) {
+  if (args.quantity <= 0) throw new Error("จำนวนต้องมากกว่า 0");
+  if (args.fromBranchId === args.toBranchId) throw new Error("สาขาต้นทางและปลายทางต้องต่างกัน");
+  await callRpc({
+    type: "TRANSFER", productId: args.productId,
+    branchId: args.fromBranchId, toBranchId: args.toBranchId,
+    quantity: args.quantity, note: args.note,
   });
 }
 
-export async function stockOut(
-  args: BaseArgs & { branchId: BranchId },
-) {
-  const { productId, productName, quantity, note, branchId, createdBy, createdByName } = args;
-  if (quantity <= 0) throw new Error("จำนวนต้องมากกว่า 0");
-
-  await runTransaction(db, async (tx) => {
-    const stockRef = doc(db, "stock", stockId(branchId, productId));
-    const txRef = doc(collection(db, "transactions"));
-    const snap = await tx.get(stockRef);
-    const before = snap.exists() ? (snap.data().quantity as number) : 0;
-    if (before < quantity) throw new Error(`สต๊อกไม่พอ (คงเหลือ ${before})`);
-    const after = before - quantity;
-
-    tx.set(stockRef, {
-      branchId,
-      productId,
-      quantity: after,
-      updatedAt: Date.now(),
-    });
-
-    tx.set(txRef, {
-      type: "OUT" as TxType,
-      productId,
-      productName,
-      branchId,
-      quantity,
-      quantityBefore: before,
-      quantityAfter: after,
-      note: note ?? "",
-      createdAt: Date.now(),
-      createdBy,
-      createdByName,
-      serverAt: serverTimestamp(),
-    });
-  });
-}
-
-export async function transferStock(
-  args: BaseArgs & { fromBranchId: BranchId; toBranchId: BranchId },
-) {
-  const {
-    productId, productName, quantity, note,
-    fromBranchId, toBranchId, createdBy, createdByName,
-  } = args;
-  if (quantity <= 0) throw new Error("จำนวนต้องมากกว่า 0");
-  if (fromBranchId === toBranchId) throw new Error("สาขาต้นทางและปลายทางต้องต่างกัน");
-
-  await runTransaction(db, async (tx) => {
-    const fromRef = doc(db, "stock", stockId(fromBranchId, productId));
-    const toRef = doc(db, "stock", stockId(toBranchId, productId));
-    const txRef = doc(collection(db, "transactions"));
-
-    const fromSnap = await tx.get(fromRef);
-    const toSnap = await tx.get(toRef);
-
-    const fromBefore = fromSnap.exists() ? (fromSnap.data().quantity as number) : 0;
-    const toBefore = toSnap.exists() ? (toSnap.data().quantity as number) : 0;
-    if (fromBefore < quantity) throw new Error(`สต๊อกต้นทางไม่พอ (คงเหลือ ${fromBefore})`);
-
-    const fromAfter = fromBefore - quantity;
-    const toAfter = toBefore + quantity;
-
-    tx.set(fromRef, {
-      branchId: fromBranchId, productId,
-      quantity: fromAfter, updatedAt: Date.now(),
-    });
-    tx.set(toRef, {
-      branchId: toBranchId, productId,
-      quantity: toAfter, updatedAt: Date.now(),
-    });
-
-    tx.set(txRef, {
-      type: "TRANSFER" as TxType,
-      productId, productName,
-      branchId: fromBranchId,
-      fromBranchId, toBranchId,
-      quantity,
-      quantityBefore: fromBefore,
-      quantityAfter: fromAfter,
-      // also store dest snapshot for audit
-      destQuantityBefore: toBefore,
-      destQuantityAfter: toAfter,
-      note: note ?? "",
-      createdAt: Date.now(),
-      createdBy, createdByName,
-      serverAt: serverTimestamp(),
-    });
-  });
-}
-
-// Sanity helper for clients to peek a stock value (rare; usually subscribed)
 export async function getStockOnce(branchId: string, productId: string) {
-  const snap = await getDoc(doc(db, "stock", stockId(branchId, productId)));
-  return snap.exists() ? (snap.data().quantity as number) : 0;
+  const { data } = await supabase.from("stock_balances")
+    .select("quantity").eq("branch_id", branchId).eq("product_id", productId).maybeSingle();
+  return data ? Number(data.quantity) || 0 : 0;
 }
