@@ -1,13 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { addDoc, collection, deleteDoc, doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { supabase } from "@/integrations/supabase/client";
 import { useProducts } from "@/lib/firestore-hooks";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import type { Product } from "@/lib/firebase";
 
@@ -71,7 +70,7 @@ function ProductsPage() {
                   <Pencil className="h-4 w-4" />
                 </Button>
                 <Button variant="ghost" size="icon" onClick={async () => {
-                  if (confirm(`ลบสินค้า "${p.name}"?`)) await deleteDoc(doc(db, "products", p.id));
+                  if (confirm(`ลบสินค้า "${p.name}"?`)) await supabase.from("products").delete().eq("id", p.id);
                 }}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
@@ -98,39 +97,39 @@ function ProductDialog({ open, onOpenChange, editing }: {
     minStock: editing?.minStock ?? 0,
   });
 
-  // reset on editing change
-  useMemoReset(editing, () => setForm({
-    name: editing?.name ?? "",
-    sku: editing?.sku ?? "",
-    unit: editing?.unit ?? "กก.",
-    category: editing?.category ?? "",
-    minStock: editing?.minStock ?? 0,
-  }));
-
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
-    if (!form.name.trim()) return;
+    if (!form.name.trim() || !form.sku.trim()) return;
     setSubmitting(true);
     try {
       const payload = {
         name: form.name.trim(),
         sku: form.sku.trim(),
         unit: form.unit.trim() || "หน่วย",
-        category: form.category.trim(),
-        minStock: Number(form.minStock) || 0,
+        category: form.category.trim() || null,
+        min_stock: Number(form.minStock) || 0,
       };
       if (editing) {
-        await updateDoc(doc(db, "products", editing.id), payload);
+        await supabase.from("products").update(payload).eq("id", editing.id);
       } else {
-        await addDoc(collection(db, "products"), { ...payload, createdAt: Date.now() });
+        await supabase.from("products").insert(payload);
       }
       onOpenChange(false);
     } finally { setSubmitting(false); }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => {
+      onOpenChange(v);
+      if (v) setForm({
+        name: editing?.name ?? "",
+        sku: editing?.sku ?? "",
+        unit: editing?.unit ?? "กก.",
+        category: editing?.category ?? "",
+        minStock: editing?.minStock ?? 0,
+      });
+    }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{editing ? "แก้ไขสินค้า" : "เพิ่มสินค้าใหม่"}</DialogTitle>
@@ -142,8 +141,8 @@ function ProductDialog({ open, onOpenChange, editing }: {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>รหัส SKU</Label>
-              <Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
+              <Label>รหัส SKU *</Label>
+              <Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} required />
             </div>
             <div className="space-y-1.5">
               <Label>หน่วย</Label>
@@ -171,16 +170,4 @@ function ProductDialog({ open, onOpenChange, editing }: {
       </DialogContent>
     </Dialog>
   );
-}
-
-import { useEffect, useRef } from "react";
-function useMemoReset<T>(key: T, fn: () => void) {
-  const ref = useRef(key);
-  useEffect(() => {
-    if (ref.current !== key) {
-      ref.current = key;
-      fn();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
 }

@@ -22,9 +22,9 @@ async function callRpc(args: {
     _type: args.type,
     _product_id: args.productId,
     _branch_id: args.branchId,
-    _to_branch_id: args.toBranchId ?? null,
+    _to_branch_id: (args.toBranchId ?? null) as string,
     _quantity: args.quantity,
-    _note: args.note ?? null,
+    _note: (args.note ?? null) as string,
   });
   if (error) {
     const msg = error.message || "";
