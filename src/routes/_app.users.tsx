@@ -2,11 +2,21 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useUsers } from "@/lib/firestore-hooks";
-import { BRANCHES, branchName, db, type BranchId, type Role } from "@/lib/firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { supabase } from "@/integrations/supabase/client";
+import { BRANCHES, type BranchId, type Role } from "@/lib/firebase";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_app/users")({ component: UsersPage });
+
+async function upsertRole(uid: string, role: Role, branchId: BranchId | null) {
+  // Replace all roles for this user with the new one row
+  await supabase.from("user_roles").delete().eq("user_id", uid);
+  await supabase.from("user_roles").insert({
+    user_id: uid,
+    role,
+    branch_id: role === "owner" ? null : branchId,
+  });
+}
 
 function UsersPage() {
   const { profile } = useAuth();
@@ -23,16 +33,18 @@ function UsersPage() {
   const setRole = async (uid: string, role: Role) => {
     setSavingId(uid);
     try {
-      await updateDoc(doc(db, "users", uid), {
-        role,
-        branchId: role === "owner" ? null : (users.find((u) => u.uid === uid)?.branchId ?? "central-kitchen"),
-      });
+      const current = users.find((u) => u.uid === uid);
+      const branch = (current?.branchId ?? "central-kitchen") as BranchId;
+      await upsertRole(uid, role, branch);
     } finally { setSavingId(null); }
   };
   const setBranch = async (uid: string, branchId: BranchId) => {
     setSavingId(uid);
-    try { await updateDoc(doc(db, "users", uid), { branchId }); }
-    finally { setSavingId(null); }
+    try {
+      const current = users.find((u) => u.uid === uid);
+      const role = (current?.role ?? "staff") as Role;
+      await upsertRole(uid, role, branchId);
+    } finally { setSavingId(null); }
   };
 
   return (
@@ -65,6 +77,7 @@ function UsersPage() {
                   <SelectItem value="owner">เจ้าของ</SelectItem>
                   <SelectItem value="manager">ผู้จัดการ</SelectItem>
                   <SelectItem value="staff">พนักงาน</SelectItem>
+                  <SelectItem value="warehouse">คลังกลาง</SelectItem>
                 </SelectContent>
               </Select>
               {u.role !== "owner" && (

@@ -5,7 +5,7 @@ import { branchName } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type RoleName = "owner" | "manager" | "staff";
+type RoleName = "owner" | "manager" | "staff" | "warehouse";
 interface NavItem {
   to: string;
   label: string;

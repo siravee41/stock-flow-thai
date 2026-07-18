@@ -1,19 +1,5 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyB6G9cm0EeUkYUuZoDpv1f4koJPZzCmfOI",
-  authDomain: "stock-system-d1250.firebaseapp.com",
-  projectId: "stock-system-d1250",
-  storageBucket: "stock-system-d1250.firebasestorage.app",
-  messagingSenderId: "135636367674",
-  appId: "1:135636367674:web:55f47eb0445df30addb803",
-};
-
-export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Backwards-compatible constants & types.
+// The system now runs on Lovable Cloud — this file no longer initializes Firebase.
 
 export const BRANCHES = [
   { id: "central-kitchen", name: "Central Kitchen", short: "ครัวกลาง" },
@@ -26,7 +12,7 @@ export type BranchId = (typeof BRANCHES)[number]["id"];
 export const branchName = (id: string) =>
   BRANCHES.find((b) => b.id === id)?.name ?? id;
 
-export type Role = "owner" | "manager" | "staff";
+export type Role = "owner" | "manager" | "staff" | "warehouse";
 
 export interface UserProfile {
   uid: string;
@@ -62,7 +48,7 @@ export interface Transaction {
   type: TxType;
   productId: string;
   productName: string;
-  branchId: BranchId; // primary branch (source for transfer/out, dest for in)
+  branchId: BranchId;
   fromBranchId?: BranchId;
   toBranchId?: BranchId;
   quantity: number;
