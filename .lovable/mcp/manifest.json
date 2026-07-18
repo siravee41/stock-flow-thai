@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "sdk_version": "0.23.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "stock-flow-thai-mcp",
+      "version": "0.1.0",
+      "title": "Stock Flow (Thai) MCP"
+    },
+    "tools": [
+      {
+        "name": "list_branches",
+        "title": "List branches",
+        "description": "List all restaurant branches in the inventory system.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_products",
+        "title": "List products",
+        "description": "List products in the inventory catalog. Optionally filter by category (case-insensitive substring).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "category": {
+              "description": "Optional category filter.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "recent_stock_movements",
+        "title": "Recent stock movements",
+        "description": "Return the most recent stock movements (IN/OUT/TRANSFER), newest first.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "Max rows to return (default 20).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
